@@ -22,10 +22,24 @@ SOURCE = os.path.join(HERE, "entry.png")
 DEST_DIR = "/output"
 DEST = os.path.join(DEST_DIR, "entry.png")
 
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+MAX_BYTES = 1_048_576
+
 
 def publish() -> int:
     if not os.path.isfile(SOURCE):
         print(f"error: entry image not found: {SOURCE}", file=sys.stderr)
+        return 1
+    with open(SOURCE, "rb") as f:
+        head = f.read(len(PNG_SIGNATURE))
+    if head != PNG_SIGNATURE:
+        print(f"error: {SOURCE} is not a whole PNG file", file=sys.stderr)
+        return 1
+    if os.path.getsize(SOURCE) > MAX_BYTES:
+        print(
+            f"error: {SOURCE} is over the 1 MiB gate",
+            file=sys.stderr,
+        )
         return 1
     os.makedirs(DEST_DIR, exist_ok=True)
     shutil.copyfile(SOURCE, DEST)
